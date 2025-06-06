@@ -132,14 +132,18 @@ def call_custom_llm(user_message: str, model: str) -> str:
         response = requests.post(API_URL, headers=headers, json=payload, verify=False, timeout=60)
         
         if response.status_code == 200:
-            raw = response.text
+            raw_response = response.text
             
-            # Handle the response format
-            if "end_of_stream" in raw:
-                answer, *, * = raw.partition("end_of_stream")
-                return answer.strip()
+            # Handle the response format - simplified approach
+            if "end_of_stream" in raw_response:
+                # Split on end_of_stream and take the first part
+                response_parts = raw_response.split("end_of_stream")
+                clean_response = response_parts[0].strip()
             else:
-                return raw.strip()
+                clean_response = raw_response.strip()
+            
+            return clean_response
+            
         else:
             raise Exception(f"API Error {response.status_code}: {response.text}")
             
