@@ -1,0 +1,477 @@
+[
+    {
+    "report": "UTIL-05",
+    "components": [
+      {
+        "type": "chart",
+        "series": "bar",
+        "title": "Avoidable ED Costs by Facility",
+        "subtitle": "&nbsp;",
+        "categoryField": "label",
+        "colors": ["data[0]"],
+        "flipXY": true,
+        "format": "$0,0s",
+        "numericAxisFormat": "$0,0a",
+        "numericFields": ["avoidableEDCosts"],
+        "code": "AVOIDABLE_ED_COSTS_BY_FACILITY",
+        "description": "The Emergency Department Savings Opportunity Analysis and it displays the Avoidable ED costs by Facility.",
+        "data": [
+          {
+            "label": "TISCH HOSPITAL",
+            "avoidableEDCosts": 839351.15
+          },
+          {
+            "label": "NEW YORK PRESBYTERIAN/WEILL CORNELL MEDICAL CENTER",
+            "avoidableEDCosts": 176379.39
+          },
+          {
+            "label": "LONG ISLAND JEWISH MEDICAL CENTER",
+            "avoidableEDCosts": 124407.95
+          },
+          {
+            "label": "WHITE PLAINS HOSPITAL",
+            "avoidableEDCosts": 114241.86
+          },
+          {
+            "label": "LENOX HILL HOSPITAL",
+            "avoidableEDCosts": 107045.62
+          }
+        ]
+      },
+      {
+        "type": "chart",
+        "series": "bar",
+        "title": "Avoidable ED Costs by Diagnosis",
+        "subtitle": "&nbsp;",
+        "categoryField": "label",
+        "colors": ["data[4]"],
+        "flipXY": true,
+        "format": "$0,0s",
+        "numericAxisFormat": "$0,0a",
+        "numericFields": ["avoidableEDCosts"],
+        "code": "AVOIDABLE_ED_COSTS_BY_DIAGNOSIS",
+        "description": "The Emergency Department Savings Opportunity Analysis and it displays the Avoidable ED costs by diagnosis.",
+        "data": [
+          {
+            "label": "Dorsalgia",
+            "avoidableEDCosts": 280060.96
+          },
+          {
+            "label": "Other Soft Tissue Disorders Nec",
+            "avoidableEDCosts": 182821.45
+          },
+          {
+            "label": "Headache",
+            "avoidableEDCosts": 182754.93
+          },
+          {
+            "label": "Other Joint Disorder Not Elsewhere Classified",
+            "avoidableEDCosts": 169412.93
+          },
+          {
+            "label": "Nausea And Vomiting",
+            "avoidableEDCosts": 143904.18
+          }
+        ]
+      },
+      {
+        "type": "chart",
+        "series": "bar",
+        "title": "Avoidable ED Costs by State",
+        "subtitle": "&nbsp;",
+        "categoryField": "label",
+        "colors": ["data[3]"],
+        "flipXY": true,
+        "format": "$0,0s",
+        "numericAxisFormat": "$0,0a",
+        "numericFields": ["avoidableEDCosts"],
+        "code": "AVOIDABLE_ED_COSTS_BY_STATE",
+        "description": "The Emergency Department Savings Opportunity Analysis and it displays the Avoidable ED costs by state.",
+        "data": [
+          {
+            "label": "NEW YORK",
+            "avoidableEDCosts": 2441343.46
+          },
+          {
+            "label": "NEW JERSEY",
+            "avoidableEDCosts": 631397.75
+          },
+          {
+            "label": "PENNSYLVANIA",
+            "avoidableEDCosts": 70163.54
+          },
+          {
+            "label": "Not Applicable",
+            "avoidableEDCosts": 57177.59
+          },
+          {
+            "label": "TEXAS",
+            "avoidableEDCosts": 53652.89
+          }
+        ]
+      },
+      {
+        "type": "chart",
+        "series": "bar",
+        "title": "Avoidable ED Costs by CBSA",
+        "subtitle": "&nbsp;",
+        "categoryField": "label",
+        "colors": ["data[2]"],
+        "flipXY": true,
+        "format": "$0,0s",
+        "numericAxisFormat": "$0,0a",
+        "numericFields": ["avoidableEDCosts"],
+        "code": "AVOIDABLE_ED_COSTS_BY_CBSA",
+        "description": "The Emergency Department Savings Opportunity Analysis and it displays the Avoidable ED costs by CBSA (Core Based Statistical Area).",
+        "data": [
+          {
+            "label": "New York-Newark-Jersey City, NY-NJ",
+            "avoidableEDCosts": 3005451.35
+          },
+          {
+            "label": "Bridgeport-Stamford-Danbury, CT",
+            "avoidableEDCosts": 43840.29
+          },
+          {
+            "label": "Washington-Arlington-Alexandria, DC-VA-MD-WV",
+            "avoidableEDCosts": 39880.21
+          },
+          {
+            "label": "East Stroudsburg, PA",
+            "avoidableEDCosts": 36999.96
+          },
+          {
+            "label": "Philadelphia-Camden-Wilmington, PA-NJ-DE-MD",
+            "avoidableEDCosts": 32839.53
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "UTIL-03",
+    "type": "dashboard",
+    "title": "Utilization by Top 25 Facility Providers",
+    "dataSet": "Medical",
+    "description": "Utilization by Top 25 Facility Providers",
+    "logoCode": "2",
+    "items": [
+      {
+        "type": "page",
+        "items": [
+          {
+            "type": "hbox",
+            "style": {
+              "flex": "none"
+            },
+            "items": [
+              {
+                "type": "visual",
+                "componentCode": "IN_NETWORK_INPATIENT_ADMISSIONS"
+              },
+              {
+                "type": "visual",
+                "componentCode": "OUT_OF_NETWORK_INPATIENT_ADMISSIONS"
+              },
+              {
+                "type": "visual",
+                "componentCode": "IN_NETWORK_OUTPATIENT_VISITS"
+              },
+              {
+                "type": "visual",
+                "componentCode": "OUT_OF_NETWORK_OUTPATIENT_VISITS"
+              }
+            ]
+          },
+          {
+            "type": "hbox",
+            "style": {
+              "flex": "none",
+              "justifyContent": "center",
+              "height": "248px"
+            },
+            "items": [
+              {
+                "type": "visual",
+                "componentCode": "TOTAL_PAID_AMOUNT_BY_NETWORK_STATUS_(MEDICAL)",
+                "style": {
+                  "maxWidth": 568
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "data": {
+      "claimsVsAllowed": "Paid",
+      "claimTypeValue": "Paid",
+      "currentPeriodEnd": "202501",
+      "currentPeriodStart": "202402",
+      "departments": "",
+      "departmentsNm": "",
+      "departmentsParams": [],
+      "earliestTimePeriod": "202202",
+      "employerGroupReporting1": "",
+      "employerGroupReporting2": "",
+      "employerGroupReporting3": "",
+      "employerGroupReporting1Nm": "",
+      "employerGroupReporting2Nm": "",
+      "employerGroupReporting3Nm": "",
+      "employerGroupReporting1Params": [],
+      "employerGroupReporting2Params": [],
+      "employerGroupReporting3Params": [],
+      "groups": "",
+      "groupsNm": "",
+      "groupsParams": [],
+      "hccThreshold": "75000",
+      "popCoHealthConditions": "",
+      "popCoHealthConditionsNm": "",
+      "popCoHealthConditionsParams": [],
+      "popCoChronicConditions": "",
+      "popCoChronicConditionsNm": "",
+      "popCoChronicConditionsParams": [],
+      "popCoContinuousEnrollment": "",
+      "popCoContinuousEnrollmentNm": "",
+      "popCoContinuousEnrollmentParams": [],
+      "popCoAgeBand": "",
+      "popCoAgeBandNm": "",
+      "popCoAgeBandParams": [],
+      "popCoStateCode": "",
+      "popCoStateCodeNm": "",
+      "popCoStateCodeParams": [],
+      "popCoMemberGender": "",
+      "popCoMemberGenderNm": "",
+      "popCoMemberGenderParams": [],
+      "popCoRelationship": "",
+      "popCoRelationshipNm": "",
+      "popCoRelationshipParams": [],
+      "popCoEngagement": "",
+      "popCoEngagementNm": "",
+      "popCoEngagementParams": [],
+      "popCoExcludeHCC": false,
+      "mstrSgmntn": "W0003925-00001",
+      "mstrSgmntnName": "Total Account",
+      "packages": "",
+      "packagesNm": "",
+      "packagesParams": [],
+      "paidTypeValue": "Paid",
+      "priorPeriod1End": "202401",
+      "priorPeriod1Start": "202302",
+      "priorPeriod2End": "202301",
+      "priorPeriod2Start": "202202",
+      "products": "",
+      "productsNm": "",
+      "productsParams": [],
+      "prvcycd": false,
+      "rptSprsnInd": "N",
+      "runOutMonths": null,
+      "runOutOfMonthsChange": false,
+      "savedFilterKey": "-292",
+      "sessionKey": "7e85e123-1cc4-4eb9-894d-2328edd94011",
+      "sgmntnLoadInd": "Y",
+      "status": "",
+      "statusNm": "",
+      "statusParams": [],
+      "subGroupRollup1": "",
+      "subGroupRollup2": "",
+      "subGroupRollup3": "",
+      "subGroupRollup4": "",
+      "subGroupRollup1Nm": "",
+      "subGroupRollup2Nm": "",
+      "subGroupRollup3Nm": "",
+      "subGroupRollup4Nm": "",
+      "subGroupRollup1Params": [],
+      "subGroupRollup2Params": [],
+      "subGroupRollup3Params": [],
+      "subGroupRollup4Params": [],
+      "subGroups": "",
+      "subGroupsNm": "",
+      "subGroupsParams": [],
+      "timePeriod": "r12m",
+      "timeperiodType": "r12m",
+      "userCategory": "1",
+      "userId": "AG29246",
+      "cohortKey": -1,
+      "customTpKey": -1,
+      "nabp": "NA",
+      "accountId": "W0003925",
+      "accountName": "UNITED NATIONS",
+      "key": "R",
+      "phi": false,
+      "subgroupRptg1LabelCode": "Subgroup Rollup 1",
+      "subgroupRptg2LabelCode": "Subgroup Rollup 2",
+      "subgroupRptg3LabelCode": "Subgroup Rollup 3",
+      "subgroupRptg4LabelCode": "Subgroup Rollup 4",
+      "grouppRptg1LabelCode": "Group Reporting 1",
+      "grouppRptg2LabelCode": "Group Reporting 2",
+      "grouppRptg3LabelCode": "Group Reporting 3",
+      "defaultHccThresholdAmount": "75000",
+      "displayDept": true,
+      "displayGroupRptg1Code": false,
+      "displayGroupRptg2Code": false,
+      "displayGroupRptg3Code": false,
+      "displayRlup1Code": false,
+      "displayRlup2Code": false,
+      "displayRlup3Code": false,
+      "displayRlup4Code": false,
+      "displayStatus": true,
+      "accountPlanMonthNbr": 7,
+      "accountSizeClassificationnCode": "LARGE",
+      "accountDefaultTmProdCode": "r12m",
+      "rptgBrandLogoCd": "2",
+      "defaultClaimsVsAllowedValue": "Paid",
+      "account_3061_ind": "0",
+      "paidOrIncured": "Paid",
+      "lastCompleteMonthLoaded": "Jan 2025",
+      "defaultBenchmark1Value": "Under 65 Population",
+      "defaultAdhocBenchmark1Value": "Under 65 Population",
+      "defaultAdhocBenchmark2Value": "National",
+      "defaultLadderedRunoutValue": "N",
+      "privacyRuleCode": false,
+      "reportingPrivacyCode": false,
+      "excludedPrivacyViewList": null,
+      "grsAcctInd": "N",
+      "acctGrpTypeCd": "STD",
+      "acctGrpBusTypeCd": "OTHER",
+      "acctTerminatedFlag": "N",
+      "rptgIncrdIndCd": "N",
+      "defaultBenchmarkId": "1",
+      "defaultBenchmarkNm": "CII BOB",
+      "defaultBenchmarkCategoryNm": "Commercial",
+      "defaultMstrSgmntn": "W0003925-00001",
+      "defaultMstrSgmntnName": "Total Account",
+      "defaultSgmntnLoadInd": "Y",
+      "defaultSavedFilterKey": "-292",
+      "sgmntnEnttlmntInd": "N",
+      "defaultIsMstrSgmntnNabp": false,
+      "isAccountNabp": false,
+      "bnchmrkCtgryNm": "Commercial",
+      "bnchmrkId": "1",
+      "bnchmrkNm": "CII BOB",
+      "mstrSgmntnRcrd": {
+        "code": "W0003925-00001",
+        "description": "Total Account",
+        "sgmntnAcctFltrKey": "-292",
+        "sgmntnLoadInd": "Y",
+        "isMstrSgmntnNabp": false
+      },
+      "isMstrSgmntnNabp": false,
+      "numberoftimeperiod": 3,
+      "paidthroughdate": "202501",
+      "currentpaidthroughdate": "202501",
+      "prior1paidthroughdate": "202401",
+      "prior2paidthroughdate": "202301",
+      "earlyViewStart": "202402",
+      "earlyViewEnd": "202501",
+      "saveFilterId": "",
+      "applicationMode": "evolve",
+      "tenantId": 101,
+      "componentParams": {
+        "paidOrIncured": "PAID",
+        "reportId": "8667685640279748162",
+        "reportName": "Utilization by Top 25 Facility Providers",
+        "timePeriodTypeCode": "r12m",
+        "logoCode": "2",
+        "uiHccThreshold": "75000",
+        "rptBnchmrkCd": "N",
+        "reportShortName": "UTIL-03",
+        "sourceFilterId": "W0003925-00001",
+        "accountId": "W0003925",
+        "asOfMonthNumber": "202501",
+        "hccThreshold": "0",
+        "bnchmrkId": "1"
+      }
+    },
+    "headerParams": {
+      "incurredInd": "N",
+      "currentPeriodStart": "202402",
+      "currentPeriodEnd": "202501",
+      "priorPeriod1Start": "202302",
+      "priorPeriod1End": "202401",
+      "priorPeriod2Start": "202202",
+      "priorPeriod2End": "202301",
+      "currentPaidThroughDate": null,
+      "prior1PaidThroughDate": null,
+      "prior2PaidThroughDate": null,
+      "mstrSgmntnName": "Total Account",
+      "nabp": "NA",
+      "benchmarkNm": null
+    },
+    "report": "UTIL-03",
+    "components": [
+      {
+        "type": "kpi",
+        "title": "In Network Inpatient Admissions",
+        "valueField": "value",
+        "valueFormat": "0,0",
+        "code": "IN_NETWORK_INPATIENT_ADMISSIONS",
+        "description": "InPatient Admissions for In-Network Providers based on the Utilization by the Top 25 Facility Providers.",
+        "data": {
+          "value": 825.0
+        }
+      },
+      {
+        "type": "kpi",
+        "title": "Out of Network Inpatient Admissions",
+        "valueField": "value",
+        "valueFormat": "0,0",
+        "code": "OUT_OF_NETWORK_INPATIENT_ADMISSIONS",
+        "description": "This potlet focuses on the InPatient Admissions for Out-of-Network Providers based on the Utilization by the Top 25 Facility Providers.",
+        "data": {
+          "value": 46.0
+        }
+      },
+      {
+        "type": "kpi",
+        "title": "In Network Outpatient Visits",
+        "valueField": "value",
+        "valueFormat": "0,0",
+        "code": "IN_NETWORK_OUTPATIENT_VISITS",
+        "description": "The OutPatient Visits to In-Network Providers based on the Utilization by the Top 25 Facility Providers.",
+        "data": {
+          "value": 28119.0
+        }
+      },
+      {
+        "type": "kpi",
+        "title": "Out of Network Outpatient Visits",
+        "valueField": "value",
+        "valueFormat": "0,0",
+        "code": "OUT_OF_NETWORK_OUTPATIENT_VISITS",
+        "description": "The OutPatient Visits to Out-of-Network Providers based on the Utilization by the Top 25 Facility Providers.",
+        "data": {
+          "value": 815.0
+        }
+      },
+      {
+        "type": "chart",
+        "series": "bar",
+        "title": "Total Paid Amount by Network Status (Medical)",
+        "categoryField": "label",
+        "colors": ["data[2]", "data[0]"],
+        "format": "$0,0s",
+        "numericAxisFormat": "$0,0.00a",
+        "numericFields": ["inpatient", "outpatient"],
+        "maxTicksLimit": 3,
+        "legend": {
+          "labels": ["Inpatient", "Outpatient"]
+        },
+        "code": "TOTAL_PAID_AMOUNT_BY_NETWORK_STATUS_(MEDICAL)",
+        "description": "Total Medical Paid Amount Inpatient and Outpatient services. The dollar amounts are categorized by the InPatient and OutPatient amounts by In-Network and Out-of-Network.",
+        "data": [
+          {
+            "label": "In Network",
+            "inpatient": 38682382.64,
+            "outpatient": 58042790.71
+          },
+          {
+            "label": "Out of Network",
+            "inpatient": 1116555.65,
+            "outpatient": 880735.74
+          }
+        ]
+      }
+    ]
+  }
+]
