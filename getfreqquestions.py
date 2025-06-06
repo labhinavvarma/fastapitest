@@ -1,44 +1,43 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import Response
-import logging
 import json
+import logging
 
 from mcp.client.sse import sse_client
 from mcp import ClientSession
 
-router = APIRouter()
+route = APIRouter()
 
-# Setup logger
 logger = logging.getLogger("frequent_questions")
 logging.basicConfig(level=logging.INFO)
 
-@router.get("/frequent_questions/{aplctn_cd}")
+@route.get("/frequent_questions/{aplctn_cd}")
 async def get_frequent_questions(aplctn_cd: str):
     """
-    Fetch and return the raw frequent questions JSON from the MCP resource
+    Runs the 'get-frequent-questions' MCP tool with the given application code and returns the raw JSON.
     """
     try:
         async with sse_client("http://localhost:8000/sse") as connection:
             async with ClientSession(*connection) as session:
                 await session.initialize()
 
-                resource_uri = f"genaiplatform://{aplctn_cd}/frequent_questions/hedis-question"
-                logger.info(f"🔍 Fetching resource: {resource_uri}")
+                # Input to the MCP tool
+                tool_input = {"aplctn_cd": aplctn_cd}
 
-                result = await session.read_resource(resource_uri)
+                logger.info(f"🚀 Running MCP tool 'get-frequent-questions' with input: {tool_input}")
+                result = await session.run_tool("get-frequent-questions", input=tool_input)
 
                 if not result:
-                    raise HTTPException(status_code=404, detail="No frequent questions found.")
+                    raise HTTPException(status_code=404, detail="Tool returned no result")
 
-                # Return raw JSON string with correct MIME type
                 return Response(content=json.dumps(result), media_type="application/json")
 
     except HTTPException as e:
-        logger.error(f"Request error: {e}")
+        logger.error(f"❌ HTTP error in get_frequent_questions: {e}")
         raise e
 
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"❌ Unexpected error in get_frequent_questions: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
