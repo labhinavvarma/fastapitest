@@ -8,36 +8,43 @@ from mcp import ClientSession
 
 route = APIRouter()
 
-logger = logging.getLogger("frequent_questions")
+# Logger setup
+logger = logging.getLogger("mcp_resource_reader")
 logging.basicConfig(level=logging.INFO)
 
-@route.get("/frequent_questions/{aplctn_cd}")
-async def get_frequent_questions(aplctn_cd: str):
+@route.get("/prompts/{aplctn_cd}")
+async def get_prompts(aplctn_cd: str):
     """
-    Runs the 'get-frequent-questions' MCP tool with the given application code and returns the raw JSON.
+    Fetch and return the full prompt JSON from MCP resource URI.
+    URI pattern: genaiplatform://{aplctn_cd}/prompts/hedis-prompt
     """
     try:
         async with sse_client("http://localhost:8000/sse") as connection:
             async with ClientSession(*connection) as session:
                 await session.initialize()
 
-                # Input to the MCP tool
-                tool_input = {"aplctn_cd": aplctn_cd}
+                # Define resource URI
+                uri = f"genaiplatform://{aplctn_cd}/prompts/hedis-prompt"
+                logger.info(f"📥 Fetching MCP resource: {uri}")
 
-                logger.info(f"🚀 Running MCP tool 'get-frequent-questions' with input: {tool_input}")
-                result = await session.run_tool("get-frequent-questions", input=tool_input)
+                # Read from MCP resource registry
+                result = await session.read_resource(uri)
 
                 if not result:
-                    raise HTTPException(status_code=404, detail="Tool returned no result")
+                    raise HTTPException(status_code=404, detail="MCP resource not found.")
 
-                return Response(content=json.dumps(result), media_type="application/json")
+                # Return as raw JSON
+                return Response(
+                    content=json.dumps(result, indent=2),
+                    media_type="application/json"
+                )
 
     except HTTPException as e:
-        logger.error(f"❌ HTTP error in get_frequent_questions: {e}")
+        logger.error(f"HTTP error: {e}")
         raise e
 
     except Exception as e:
-        logger.error(f"❌ Unexpected error in get_frequent_questions: {e}")
+        logger.exception("Unexpected error while reading MCP resource.")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
