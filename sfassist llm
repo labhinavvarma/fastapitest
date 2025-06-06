@@ -1,0 +1,429 @@
+import streamlit as st
+import requests
+import json
+import uuid
+import urllib3
+import time
+from typing import List, Dict, Any
+import math
+import re
+
+# Disable SSL warnings (only do this in internal/dev environments)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# === CONFIG ===
+API_URL = "https://sfassist.edagenaidev.awsdns.internal.das/api/cortex/complete"
+API_KEY = "78a799ea-a0f6-11ef-a0ce-15a449f7a8b0"
+APP_ID = "edadip"
+APLCTN_CD = "edagnai"
+
+# Model options
+AVAILABLE_MODELS = {
+    "llama3.1-70b": "Llama 3.1 70B (Most Capable)",
+    "llama3.1-8b": "Llama 3.1 8B (Faster)",
+    "llama3-70b": "Llama 3 70B (Alternative)",
+    "llama3-8b": "Llama 3 8B (Fastest)"
+}
+
+# === PAGE SETUP ===
+st.set_page_config(
+    page_title="🛠️ Custom LLM JSON Converter", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+st.title("🛠️ JSON Converter with Custom LLM")
+st.markdown("**Fast, reliable JSON processing with large file support using your internal LLM**")
+
+# === CONVERSION PROMPT ===
+CONVERSION_PROMPT = """You are a JSON processing expert. Your task is to extract all numeric values from the provided JSON and convert them into a standardized metric format.
+
+OUTPUT FORMAT (return ONLY this JSON array, no other text):
+[{"metric_name": "descriptive_name", "value": numeric_value}]
+
+RULES:
+1. Extract ALL numeric values (integers, floats, percentages, currencies)
+2. Create descriptive metric names based on context and field names
+3. Preserve the original numeric values exactly
+4. Ignore non-numeric fields completely
+5. If a metric has a category/label, include it in the metric name
+6. Return only valid JSON - no explanations, no markdown formatting
+
+EXAMPLE:
+Input: {"revenue": 50000, "users": {"active": 1250, "inactive": 340}}
+Output: [{"metric_name": "Revenue", "value": 50000}, {"metric_name": "Active Users", "value": 1250}, {"metric_name": "Inactive Users", "value": 340}]"""
+
+def chunk_json_data(data: Any, max_chars: int = 100000) -> List[str]:
+    """Split large JSON into manageable chunks for the LLM API"""
+    json_str = json.dumps(data, indent=2)
+    
+    if len(json_str) <= max_chars:
+        return [json_str]
+    
+    chunks = []
+    
+    # If it's a list, split by items
+    if isinstance(data, list):
+        items_per_chunk = max(1, len(data) // math.ceil(len(json_str) / max_chars))
+        for i in range(0, len(data), items_per_chunk):
+            chunk = data[i:i + items_per_chunk]
+            chunks.append(json.dumps(chunk, indent=2))
+    
+    # If it's a dict, split by top-level keys
+    elif isinstance(data, dict):
+        current_chunk = {}
+        current_size = 0
+        
+        for key, value in data.items():
+            item_str = json.dumps({key: value}, indent=2)
+            
+            if current_size + len(item_str) > max_chars and current_chunk:
+                chunks.append(json.dumps(current_chunk, indent=2))
+                current_chunk = {}
+                current_size = 0
+            
+            current_chunk[key] = value
+            current_size += len(item_str)
+        
+        if current_chunk:
+            chunks.append(json.dumps(current_chunk, indent=2))
+    
+    else:
+        # Fallback: split string into chunks
+        for i in range(0, len(json_str), max_chars):
+            chunks.append(json_str[i:i + max_chars])
+    
+    return chunks
+
+def call_custom_llm(user_message: str, model: str) -> str:
+    """Call the custom LLM API"""
+    session_id = str(uuid.uuid4())
+    
+    payload = {
+        "query": {
+            "aplctn_cd": APLCTN_CD,
+            "app_id": APP_ID,
+            "api_key": API_KEY,
+            "method": "cortex",
+            "model": model,
+            "sys_msg": "You are a powerful AI assistant specialized in JSON processing. Provide accurate, precise responses in the exact format requested.",
+            "limit_convs": "0",
+            "prompt": {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": user_message
+                    }
+                ]
+            },
+            "app_lvl_prefix": "",
+            "user_id": "",
+            "session_id": session_id
+        }
+    }
+    
+    headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "Accept": "application/json",
+        "Authorization": f'Snowflake Token="{API_KEY}"'
+    }
+    
+    try:
+        response = requests.post(API_URL, headers=headers, json=payload, verify=False, timeout=60)
+        
+        if response.status_code == 200:
+            raw = response.text
+            
+            # Handle the response format
+            if "end_of_stream" in raw:
+                answer, *, * = raw.partition("end_of_stream")
+                return answer.strip()
+            else:
+                return raw.strip()
+        else:
+            raise Exception(f"API Error {response.status_code}: {response.text}")
+            
+    except requests.Timeout:
+        raise Exception("Request timed out after 60 seconds")
+    except Exception as e:
+        raise Exception(f"API request failed: {str(e)}")
+
+def process_with_custom_llm(json_data: Any, model: str) -> tuple[List[Dict], str]:
+    """Process JSON with custom LLM API, handling large files by chunking"""
+    
+    # Check size and chunk if necessary
+    json_str = json.dumps(json_data, indent=2)
+    file_size_mb = len(json_str.encode('utf-8')) / (1024 * 1024)
+    
+    start_time = time.time()
+    all_metrics = []
+    
+    if file_size_mb > 5:  # Large file - use chunking
+        st.info(f"📦 Large file detected ({file_size_mb:.1f} MB). Processing in chunks...")
+        
+        chunks = chunk_json_data(json_data)
+        progress_bar = st.progress(0)
+        
+        for i, chunk in enumerate(chunks):
+            try:
+                with st.spinner(f"Processing chunk {i+1}/{len(chunks)}..."):
+                    full_prompt = f"{CONVERSION_PROMPT}\n\nJSON chunk to process:\n{chunk}"
+                    response_content = call_custom_llm(full_prompt, model)
+                    
+                    # Extract metrics from response
+                    metrics = extract_json_from_llm_response(response_content)
+                    all_metrics.extend(metrics)
+                    
+                progress_bar.progress((i + 1) / len(chunks))
+                
+            except Exception as e:
+                st.error(f"Error processing chunk {i+1}: {e}")
+                continue
+        
+        progress_bar.empty()
+        
+    else:  # Small file - process normally
+        try:
+            full_prompt = f"{CONVERSION_PROMPT}\n\nJSON to process:\n{json_str}"
+            response_content = call_custom_llm(full_prompt, model)
+            all_metrics = extract_json_from_llm_response(response_content)
+            
+        except Exception as e:
+            raise Exception(f"LLM API error: {e}")
+    
+    processing_time = time.time() - start_time
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_metrics = []
+    for metric in all_metrics:
+        metric_key = (metric.get('metric_name', ''), metric.get('value', ''))
+        if metric_key not in seen:
+            seen.add(metric_key)
+            unique_metrics.append(metric)
+    
+    response_summary = f"Processed {len(chunk_json_data(json_data)) if file_size_mb > 5 else 1} chunk(s) in {processing_time:.1f}s"
+    
+    return unique_metrics, response_summary
+
+def extract_json_from_llm_response(content: str) -> List[Dict]:
+    """Extract JSON array from LLM response"""
+    try:
+        # Clean up the response
+        content = content.strip()
+        
+        # Remove any markdown formatting
+        content = re.sub(r'```json\s*', '', content)
+        content = re.sub(r'```\s*$', '', content)
+        
+        # Find JSON array patterns
+        json_patterns = [
+            r'(\[(?:[^[\]]*\{[^}]*"metric_name"[^}]*\}[^[\]]*)*\])',
+            r'(\[.*?\])',
+        ]
+        
+        for pattern in json_patterns:
+            json_match = re.search(pattern, content, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+                try:
+                    result = json.loads(json_str)
+                    if isinstance(result, list):
+                        return result
+                except json.JSONDecodeError:
+                    continue
+        
+        # Fallback: try parsing the whole content
+        return json.loads(content)
+        
+    except json.JSONDecodeError as e:
+        st.error(f"Failed to parse LLM response as JSON: {e}")
+        st.text("Raw response:")
+        st.code(content)
+        return []
+
+def test_api_connection(model: str) -> bool:
+    """Test if the API is working"""
+    try:
+        test_response = call_custom_llm("Hello, respond with just 'OK'", model)
+        return "OK" in test_response or len(test_response) > 0
+    except:
+        return False
+
+# === SIDEBAR ===
+with st.sidebar:
+    st.header("🔧 Configuration")
+    
+    # Model selection
+    selected_model = st.selectbox(
+        "Model",
+        options=list(AVAILABLE_MODELS.keys()),
+        format_func=lambda x: AVAILABLE_MODELS[x],
+        index=0,  # Default to llama3.1-70b
+        help="Choose the model for processing. 70B models are more capable but slower."
+    )
+    
+    st.markdown("---")
+    
+    # API Status
+    st.header("🌐 API Status")
+    if st.button("🧪 Test API Connection"):
+        with st.spinner("Testing..."):
+            if test_api_connection(selected_model):
+                st.success("✅ API connection successful")
+            else:
+                st.error("❌ API connection failed")
+    
+    # API Info
+    st.info(f"**Endpoint:** {API_URL}")
+    st.info(f"**Model:** {selected_model}")
+    
+    # Info
+    st.header("💡 Large File Support")
+    st.write("""
+    ✅ **Automatic chunking** for files > 5MB
+    ✅ **Progress tracking** for large files  
+    ✅ **Duplicate removal** across chunks
+    ✅ **No external API costs**
+    ✅ **Internal LLM reliability**
+    """)
+    
+    st.header("⚡ Performance")
+    st.write("""
+    **Small files (<5MB):** ~10-30s
+    **Large files (>5MB):** Chunked processing
+    **Chunk size:** ~100KB per chunk
+    **Timeout:** 60s per request
+    """)
+
+# === MAIN INTERFACE ===
+uploaded_file = st.file_uploader("📁 Upload JSON file", type=["json"])
+
+if uploaded_file:
+    try:
+        # Load and analyze file
+        original_json = json.load(uploaded_file)
+        file_size = len(json.dumps(original_json).encode('utf-8'))
+        file_size_mb = file_size / (1024 * 1024)
+        
+        # File info
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("File Size", f"{file_size_mb:.1f} MB")
+        with col2:
+            if isinstance(original_json, list):
+                st.metric("Items", len(original_json))
+            elif isinstance(original_json, dict):
+                st.metric("Top-level Keys", len(original_json))
+        with col3:
+            chunks_needed = len(chunk_json_data(original_json))
+            st.metric("Processing Chunks", chunks_needed)
+        
+        # Show preview
+        with st.expander("📂 JSON Preview", expanded=False):
+            if file_size_mb > 5:
+                st.warning("Large file - showing first 1000 characters")
+                preview = json.dumps(original_json, indent=2)[:1000] + "..."
+                st.code(preview, language="json")
+            else:
+                st.json(original_json)
+        
+        # Process button
+        if st.button("🚀 Process with Custom LLM", type="primary"):
+            try:
+                with st.spinner(f"🛠️ {selected_model} is processing your JSON..."):
+                    metrics, summary = process_with_custom_llm(original_json, selected_model)
+                
+                if metrics:
+                    st.success(f"✅ Success! {summary}")
+                    
+                    # Results display
+                    col1, col2 = st.columns([2, 1])
+                    
+                    with col1:
+                        st.subheader("📊 Extracted Metrics")
+                        st.json(metrics)
+                        
+                        # Download button
+                        json_str = json.dumps(metrics, indent=2)
+                        st.download_button(
+                            label="📥 Download Metrics JSON",
+                            data=json_str,
+                            file_name=f"metrics_{uploaded_file.name}",
+                            mime="application/json"
+                        )
+                    
+                    with col2:
+                        st.subheader("📈 Summary")
+                        st.metric("Total Metrics", len(metrics))
+                        st.metric("Model Used", selected_model)
+                        
+                        # Stats
+                        if metrics:
+                            values = []
+                            for item in metrics:
+                                val = item.get('value')
+                                if isinstance(val, (int, float)):
+                                    values.append(val)
+                            
+                            if values:
+                                st.metric("Max Value", f"{max(values):,.0f}")
+                                st.metric("Min Value", f"{min(values):,.0f}")
+                                if len(values) > 1:
+                                    st.metric("Average", f"{sum(values)/len(values):,.0f}")
+                
+                else:
+                    st.warning("No metrics extracted. Check your JSON structure.")
+                    
+            except Exception as e:
+                st.error(f"❌ Error: {e}")
+                
+                if "timeout" in str(e).lower():
+                    st.info("💡 Request timed out - try a smaller file or check API status")
+                elif "connection" in str(e).lower():
+                    st.info("💡 Connection issue - check your network and API endpoint")
+
+    except json.JSONDecodeError as e:
+        st.error(f"❌ Invalid JSON file: {e}")
+    except Exception as e:
+        st.error(f"❌ File error: {e}")
+
+else:
+    # Welcome message
+    st.info("👆 Upload a JSON file to start extracting metrics")
+    
+    # Example
+    with st.expander("📖 See Example", expanded=False):
+        example_input = {
+            "revenue": 125000,
+            "users": {"active": 1250, "inactive": 340},
+            "metrics": [
+                {"name": "conversion_rate", "value": 3.2},
+                {"name": "bounce_rate", "value": 65.4}
+            ]
+        }
+        
+        example_output = [
+            {"metric_name": "Revenue", "value": 125000},
+            {"metric_name": "Active Users", "value": 1250},
+            {"metric_name": "Inactive Users", "value": 340},
+            {"metric_name": "Conversion Rate", "value": 3.2},
+            {"metric_name": "Bounce Rate", "value": 65.4}
+        ]
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Input JSON:**")
+            st.json(example_input)
+        with col2:
+            st.write("**Output Metrics:**")
+            st.json(example_output)
+
+# === FOOTER ===
+st.markdown("---")
+st.markdown(
+    "🛠️ **Powered by Custom LLM API** | "
+    "⚡ **Internal Infrastructure** | "
+    "📦 **Large file support** | "
+    "🔒 **No external API costs**"
+)
